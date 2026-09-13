@@ -1,0 +1,36 @@
+{
+  "branch": "minecolonies:technology",
+  "parentResearch": "colonist_thieves:technology/thievery",
+  "researchLevel": 3,
+  "sortOrder": 2,
+  "subtitle": "com.colonist_thieves.research.technology.fence.subtitle",
+  "requirements": [
+    {
+      "type": "minecolonies:single-building",
+      "building": "colonist_thieves:hideout",
+      "level": 2
+    },
+    {
+      "type": "minecolonies:building",
+      "building": "minecolonies:warehouse",
+      "level": 2
+    }
+  ],
+  "costs": [
+    {
+      "count": 24,
+      "item": "minecraft:emerald"
+    },
+    {
+      "count": 1,
+      "item": "minecolonies:blockminecoloniesrack"
+    }
+  ],
+  "effects": [
+    {
+      "id": "colonist_thieves:effects/fence",
+      "level": 1
+    }
+  ],
+  "icon": "minecraft:emerald"
+}

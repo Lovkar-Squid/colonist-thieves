@@ -1,0 +1,18 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:desert_pyramid",
+    "minecraft:jungle_pyramid",
+    "minecraft:mansion",
+    "minecraft:stronghold",
+    "minecraft:ancient_city",
+    "minecraft:end_city",
+    "minecraft:bastion_remnant",
+    "minecraft:fortress",
+    "minecraft:buried_treasure",
+    "minecraft:shipwreck",
+    "minecraft:trail_ruins",
+    "minecraft:ocean_ruin_cold",
+    "minecraft:ocean_ruin_warm"
+  ]
+}

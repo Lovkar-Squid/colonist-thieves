@@ -1,0 +1,36 @@
+{
+  "branch": "minecolonies:technology",
+  "parentResearch": "colonist_thieves:technology/alibi",
+  "researchLevel": 5,
+  "sortOrder": 3,
+  "subtitle": "com.colonist_thieves.research.technology.black_market.subtitle",
+  "requirements": [
+    {
+      "type": "minecolonies:single-building",
+      "building": "colonist_thieves:hideout",
+      "level": 5
+    },
+    {
+      "type": "minecolonies:building",
+      "building": "minecolonies:warehouse",
+      "level": 4
+    }
+  ],
+  "costs": [
+    {
+      "count": 48,
+      "item": "minecraft:emerald"
+    },
+    {
+      "count": 2,
+      "item": "minecraft:ender_chest"
+    }
+  ],
+  "effects": [
+    {
+      "id": "colonist_thieves:effects/fence",
+      "level": 2
+    }
+  ],
+  "icon": "minecraft:ender_chest"
+}

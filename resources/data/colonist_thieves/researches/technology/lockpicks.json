@@ -1,0 +1,31 @@
+{
+  "branch": "minecolonies:technology",
+  "parentResearch": "colonist_thieves:technology/thievery",
+  "researchLevel": 3,
+  "sortOrder": 1,
+  "subtitle": "com.colonist_thieves.research.technology.lockpicks.subtitle",
+  "requirements": [
+    {
+      "type": "minecolonies:single-building",
+      "building": "colonist_thieves:hideout",
+      "level": 1
+    }
+  ],
+  "costs": [
+    {
+      "count": 12,
+      "item": "minecraft:iron_ingot"
+    },
+    {
+      "count": 2,
+      "item": "minecraft:tripwire_hook"
+    }
+  ],
+  "effects": [
+    {
+      "id": "colonist_thieves:effects/lockpicks",
+      "level": 1
+    }
+  ],
+  "icon": "minecraft:tripwire_hook"
+}

@@ -1,0 +1,16 @@
+{
+  "icon": "colonist_thieves.png",
+  "name": "Colonist Thieves",
+  "authors": [
+    "Lovkar",
+    "Claude"
+  ],
+  "desc": "The Hideout: an ordinary shabby town building with a cellar under it, and the cellar is where the colony's thieves sleep, keep the board of marks and come back to after dark. One building, five levels, dug deeper each time. Works with every colony style.",
+  "mods": [
+    "structurize",
+    "minecolonies",
+    "colonist_thieves"
+  ],
+  "version": "1",
+  "pack-format": "1"
+}

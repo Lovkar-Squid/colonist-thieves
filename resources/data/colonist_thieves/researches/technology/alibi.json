@@ -1,0 +1,36 @@
+{
+  "branch": "minecolonies:technology",
+  "parentResearch": "colonist_thieves:technology/fence",
+  "researchLevel": 4,
+  "sortOrder": 2,
+  "subtitle": "com.colonist_thieves.research.technology.alibi.subtitle",
+  "requirements": [
+    {
+      "type": "minecolonies:single-building",
+      "building": "colonist_thieves:hideout",
+      "level": 3
+    },
+    {
+      "type": "minecolonies:building",
+      "building": "minecolonies:townhall",
+      "level": 4
+    }
+  ],
+  "costs": [
+    {
+      "count": 16,
+      "item": "minecraft:paper"
+    },
+    {
+      "count": 4,
+      "item": "minecraft:gold_ingot"
+    }
+  ],
+  "effects": [
+    {
+      "id": "colonist_thieves:effects/alibi",
+      "level": 1
+    }
+  ],
+  "icon": "minecraft:paper"
+}

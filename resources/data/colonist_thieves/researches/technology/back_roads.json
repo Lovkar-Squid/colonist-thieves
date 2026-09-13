@@ -1,0 +1,31 @@
+{
+  "branch": "minecolonies:technology",
+  "parentResearch": "colonist_thieves:technology/lockpicks",
+  "researchLevel": 4,
+  "sortOrder": 1,
+  "subtitle": "com.colonist_thieves.research.technology.back_roads.subtitle",
+  "requirements": [
+    {
+      "type": "minecolonies:single-building",
+      "building": "colonist_thieves:hideout",
+      "level": 3
+    }
+  ],
+  "costs": [
+    {
+      "count": 32,
+      "item": "minecraft:gravel"
+    },
+    {
+      "count": 8,
+      "item": "minecraft:leather"
+    }
+  ],
+  "effects": [
+    {
+      "id": "colonist_thieves:effects/back_roads",
+      "level": 1
+    }
+  ],
+  "icon": "minecraft:leather_boots"
+}

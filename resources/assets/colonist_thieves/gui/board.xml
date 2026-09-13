@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/ldtteam/BlockUI/version/main/src/main/resources/assets/blockui/gui/block_ui.xsd"
+        size="190 244">
+
+    <image source="minecolonies:textures/gui/builderhut/builder_paper.png" size="190 244"/>
+    <text id="title" size="150 11" pos="20 13" color="black" textalign="MIDDLE"
+          label="$(com.colonist_thieves.gui.board.title)"/>
+
+    <text id="crewtitle" size="170 11" pos="11 28" color="black" textscale="0.9"
+          label="$(com.colonist_thieves.gui.board.crew)"/>
+    <list id="crew" size="168 56" pos="11 39"
+          emptytext="$(com.colonist_thieves.gui.board.nocrew)" emptycolor="black">
+        <box size="100% 26" linewidth="0">
+            <text id="who" size="152 11" pos="3 1" color="black"/>
+            <text id="doing" size="152 12" pos="3 13" color="black" textscale="0.8"/>
+        </box>
+    </list>
+
+    <text id="marktitle" size="170 11" pos="11 100" color="black" textscale="0.9"
+          label="$(com.colonist_thieves.gui.board.marks)"/>
+    <list id="marks" size="168 132" pos="11 111"
+          emptytext="$(com.colonist_thieves.gui.board.nomarks)" emptycolor="black">
+        <box size="100% 30" linewidth="0">
+            <text id="place" size="110 11" pos="3 2" color="black"/>
+            <text id="detail" size="110 12" pos="3 14" color="black" textscale="0.8"/>
+            <button id="unpin" size="38 17" pos="116 6" color="black"
+                    source="minecolonies:textures/gui/builderhut/builder_button_small.png"
+                    label="$(com.colonist_thieves.gui.board.unpin)"/>
+        </box>
+    </list>
+</window>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/ldtteam/BlockUI/version/main/src/main/resources/assets/blockui/gui/block_ui.xsd"
+        size="190 244">
+
+    <image source="minecolonies:textures/gui/builderhut/builder_paper.png" size="190 244"/>
+    <text id="title" size="150 11" pos="20 13" color="black" textalign="MIDDLE"
+          label="$(com.colonist_thieves.gui.ledger.title)"/>
+    <text id="summary" size="170 11" pos="10 27" color="black" textalign="MIDDLE" textscale="0.8"/>
+
+    <list id="nights" size="168 195" pos="11 41"
+          emptytext="$(com.colonist_thieves.gui.ledger.empty)" emptycolor="black">
+        <box size="100% 26" linewidth="0">
+            <text id="place" size="152 11" pos="3 1" color="black"/>
+            <text id="result" size="152 12" pos="3 13" color="black" textscale="0.8"/>
+        </box>
+    </list>
+</window>

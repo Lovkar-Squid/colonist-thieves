@@ -1,0 +1,31 @@
+{
+  "branch": "minecolonies:technology",
+  "parentResearch": "colonist_thieves:technology/thievery",
+  "researchLevel": 3,
+  "sortOrder": 3,
+  "subtitle": "com.colonist_thieves.research.technology.cold_trail.subtitle",
+  "requirements": [
+    {
+      "type": "minecolonies:single-building",
+      "building": "colonist_thieves:hideout",
+      "level": 2
+    }
+  ],
+  "costs": [
+    {
+      "count": 16,
+      "item": "minecraft:soul_sand"
+    },
+    {
+      "count": 8,
+      "item": "minecraft:coal"
+    }
+  ],
+  "effects": [
+    {
+      "id": "colonist_thieves:effects/cold_trail",
+      "level": 1
+    }
+  ],
+  "icon": "minecraft:soul_sand"
+}

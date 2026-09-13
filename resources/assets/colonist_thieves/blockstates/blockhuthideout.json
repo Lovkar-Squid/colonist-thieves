@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "colonist_thieves:block/blockhuthideout",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "colonist_thieves:block/blockhuthideout",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "colonist_thieves:block/blockhuthideout",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "colonist_thieves:block/blockhuthideout",
+      "y": 270
+    }
+  }
+}

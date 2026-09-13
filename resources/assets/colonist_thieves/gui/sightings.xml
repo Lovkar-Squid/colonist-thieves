@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/ldtteam/BlockUI/version/main/src/main/resources/assets/blockui/gui/block_ui.xsd"
+        size="190 244">
+
+    <image source="minecolonies:textures/gui/builderhut/builder_paper.png" size="190 244"/>
+    <text id="title" size="150 11" pos="20 13" color="black" textalign="MIDDLE"
+          label="$(com.colonist_thieves.gui.sightings.title)"/>
+
+    <button id="look" size="82 17" pos="11 26" color="black"
+            source="minecolonies:textures/gui/builderhut/builder_button_medium_large.png"
+            disabled="minecolonies:textures/gui/builderhut/builder_button_medium_large_disabled.png"
+            disabledsize="82 17"
+            label="$(com.colonist_thieves.gui.sightings.look)"/>
+
+    <button id="mode" size="82 17" pos="97 26" color="black"
+            source="minecolonies:textures/gui/builderhut/builder_button_medium_large.png"
+            disabled="minecolonies:textures/gui/builderhut/builder_button_medium_large_disabled.png"
+            disabledsize="82 17"/>
+
+    <list id="places" size="168 195" pos="11 46"
+          emptytext="$(com.colonist_thieves.gui.sightings.empty)" emptycolor="black">
+        <box size="100% 40" linewidth="0">
+            <text id="place" size="112 11" pos="3 1" color="black"/>
+            <text id="where" size="112 10" pos="3 12" color="black" textscale="0.8"/>
+            <text id="risk" size="112 10" pos="3 21" color="black" textscale="0.8"/>
+            <text id="known" size="112 10" pos="3 30" color="black" textscale="0.8"/>
+            <button id="send" size="38 17" pos="116 11" color="black"
+                    source="minecolonies:textures/gui/builderhut/builder_button_small.png"
+                    disabled="minecolonies:textures/gui/builderhut/builder_button_small_disabled.png"
+                    disabledsize="34 17"/>
+        </box>
+    </list>
+</window>

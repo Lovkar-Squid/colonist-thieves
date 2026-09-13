@@ -1,0 +1,31 @@
+{
+  "branch": "minecolonies:technology",
+  "parentResearch": "colonist_thieves:technology/back_roads",
+  "researchLevel": 5,
+  "sortOrder": 1,
+  "subtitle": "com.colonist_thieves.research.technology.master_locks.subtitle",
+  "requirements": [
+    {
+      "type": "minecolonies:single-building",
+      "building": "colonist_thieves:hideout",
+      "level": 4
+    }
+  ],
+  "costs": [
+    {
+      "count": 8,
+      "item": "minecraft:diamond"
+    },
+    {
+      "count": 4,
+      "item": "minecraft:tripwire_hook"
+    }
+  ],
+  "effects": [
+    {
+      "id": "colonist_thieves:effects/lockpicks",
+      "level": 2
+    }
+  ],
+  "icon": "minecraft:diamond"
+}

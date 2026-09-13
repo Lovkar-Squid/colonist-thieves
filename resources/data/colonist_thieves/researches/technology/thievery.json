@@ -1,0 +1,35 @@
+{
+  "branch": "minecolonies:technology",
+  "parentResearch": "minecolonies:technology/softshoes",
+  "researchLevel": 2,
+  "sortOrder": 1,
+  "subtitle": "com.colonist_thieves.research.technology.thievery.subtitle",
+  "requirements": [
+    {
+      "type": "minecolonies:building",
+      "building": "minecolonies:townhall",
+      "level": 3
+    }
+  ],
+  "costs": [
+    {
+      "count": 16,
+      "item": "minecraft:string"
+    },
+    {
+      "count": 8,
+      "item": "minecraft:iron_ingot"
+    },
+    {
+      "count": 4,
+      "item": "minecraft:black_dye"
+    }
+  ],
+  "effects": [
+    {
+      "id": "colonist_thieves:effects/blockhuthideout",
+      "level": 1
+    }
+  ],
+  "icon": "colonist_thieves:blockhuthideout"
+}
