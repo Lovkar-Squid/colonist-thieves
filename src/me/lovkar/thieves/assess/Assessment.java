@@ -16,7 +16,7 @@ import net.minecraft.server.level.ServerLevel;
  * What a place is worth robbing, and what it costs to try - one honest reading of somewhere,
  * shared by both mods.
  *
- * <p>This is the class Marko's third rule is about: <i>measure a colony by what is actually
+ * <p>This is the class Lovkar's third rule is about: <i>measure a colony by what is actually
  * built</i>. Nothing here is a difficulty slider. Every number comes from the world - guards that
  * are really hired, buildings that really stand at the level they really are, wall that is really
  * there, and MineColonies' own idea of how big a horde this colony deserves. The thief reads

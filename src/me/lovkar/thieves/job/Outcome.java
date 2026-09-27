@@ -6,7 +6,7 @@ package me.lovkar.thieves.job;
  * <p>{@link #CLEAN} is the only one that costs nothing: on a server, a colony that is robbed
  * cleanly knows only that its stores are short. {@link #SPOTTED} means somebody saw a stranger in
  * the warehouse and can guess where he came from. {@link #CAUGHT} means they have him - no loot, a
- * wounded or held thief, and a raid on its way. That is Marko's first rule in three constants:
+ * wounded or held thief, and a raid on its way. That is Lovkar's first rule in three constants:
  * <b>standing falls only when the job goes wrong.</b></p>
  */
 public enum Outcome {

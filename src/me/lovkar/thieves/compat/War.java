@@ -116,7 +116,7 @@ public final class War {
     }
 
     /**
-     * Tell the war mod a thief was caught or seen. <b>This is the whole of Marko's first rule:</b>
+     * Tell the war mod a thief was caught or seen. <b>This is the whole of Lovkar's first rule:</b>
      * standing only ever moves when the job goes wrong, and only the war mod moves it.
      */
     public static void offend(final IColony mine, final int theirs, final int amount, final String why) {

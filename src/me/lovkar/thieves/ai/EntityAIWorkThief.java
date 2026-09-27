@@ -43,7 +43,7 @@ import java.util.List;
  *
  * <p>Everything that follows from the roll happens in one place, {@link #comeHome()}: the take goes
  * into the sack, the place gets more nervous, and - <b>only if he was caught or seen</b> - somebody
- * over there works out where he came from. Marko's first rule lives on that one condition.</p>
+ * over there works out where he came from. Lovkar's first rule lives on that one condition.</p>
  */
 public class EntityAIWorkThief extends AbstractEntityAIBasic<JobThief, BuildingHideout> {
 
