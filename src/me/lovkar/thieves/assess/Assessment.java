@@ -206,6 +206,10 @@ public record Assessment(String name, TargetKind kind, int garrisonHome, int gar
         if (target.kind() == TargetKind.KINGDOM) {
             return Profiles.kingdom(level, target, Kingdoms.at(level, target.pos()));
         }
+        if (target.kind() == TargetKind.CONVOY) {
+            // a convoy is never where its mark says it is: it is read by id, from its escort
+            return Profiles.convoy(level, target);
+        }
         return Profiles.structure(level, target);
     }
 }

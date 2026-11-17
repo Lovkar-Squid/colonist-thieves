@@ -37,8 +37,14 @@ public record Job(Target target, Work work) {
         return new Job(target, tag.contains(TAG_WORK) ? Work.byId(tag.getString(TAG_WORK)) : Work.ROB);
     }
 
-    /** "the Village Forest job" / "a look at Village Forest" / "the job on Village Forest". */
+    /**
+     * "the Village Forest job" / "a look at Village Forest" / "the job on Village Forest" - and a
+     * convoy, whose name already reads as a job: "a convoy from Ironhold to Oakford".
+     */
     public String describe() {
+        if (target.kind() == TargetKind.CONVOY) {
+            return target.name();
+        }
         return switch (work) {
             case SCOUT -> "a look at " + target.name();
             case SABOTAGE -> "the job on " + target.name();

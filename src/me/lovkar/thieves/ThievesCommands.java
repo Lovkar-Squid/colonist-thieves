@@ -83,6 +83,11 @@ public final class ThievesCommands {
                                                                 IntegerArgumentType.getInteger(ctx, "z"),
                                                                 com.mojang.brigadier.arguments.StringArgumentType
                                                                         .getString(ctx, "kind"))))))))
+                .then(Commands.literal("convoy")
+                        .executes(ctx -> convoys(ctx.getSource()))
+                        .then(Commands.argument("id", com.mojang.brigadier.arguments.LongArgumentType.longArg(1L))
+                                .executes(ctx -> convoy(ctx.getSource(),
+                                        com.mojang.brigadier.arguments.LongArgumentType.getLong(ctx, "id")))))
                 .then(Commands.literal("intel")
                         .executes(ctx -> intel(ctx.getSource())))
                 .then(Commands.literal("log")
@@ -135,6 +140,11 @@ public final class ThievesCommands {
             source.sendFailure(Component.literal("nothing there worth robbing; give a kind to force one"));
             return 0;
         }
+        if (kind != null && me.lovkar.thieves.target.TargetKind.CONVOY.id().equalsIgnoreCase(kind)) {
+            // a convoy is not anywhere: it is found by the war mod's id, never forced at a spot
+            source.sendFailure(Component.literal("a convoy is sent by its id: /thieves convoy <id>"));
+            return 0;
+        }
         if (kind != null) {
             final me.lovkar.thieves.target.TargetKind forced = me.lovkar.thieves.target.TargetKind.byId(kind);
             target = Target.ofStructure(forced, level.dimension(), at,
@@ -174,6 +184,67 @@ public final class ThievesCommands {
         source.sendSuccess(() -> Component.literal("pinned to the board: " + work.id() + " "
                 + pinned.name() + " (" + pinned.kind().id() + ")  the board now holds "
                 + onBoard + " job(s)"), false);
+        return 1;
+    }
+
+    /**
+     * The convoys this colony's Hideout can see on the road, with the ids {@code /thieves convoy}
+     * takes - nearest first, as the hut's list would show them.
+     */
+    private static int convoys(final net.minecraft.commands.CommandSourceStack source) {
+        final me.lovkar.thieves.colony.BuildingHideout hideout = hideoutAt(source);
+        if (hideout == null) {
+            source.sendFailure(Component.literal("stand in a colony that has a Hideout"));
+            return 0;
+        }
+        if (!me.lovkar.thieves.compat.War.convoys()) {
+            source.sendFailure(Component.literal("no convoys: Colonies at War 0.3.0 or newer is not installed"));
+            return 0;
+        }
+        final ServerLevel level = source.getLevel();
+        final java.util.List<me.lovkar.thieves.target.Convoys.Seen> road = new java.util.ArrayList<>(
+                me.lovkar.thieves.target.Convoys.offered(level, hideout.getPosition(),
+                        hideout.getBuildingLevel(), hideout.getColony()));
+        final BlockPos home = hideout.getPosition();
+        road.sort(java.util.Comparator.comparingDouble(seen -> seen.target().pos().distSqr(home)));
+        final int range = me.lovkar.thieves.target.Convoys.range(hideout.getBuildingLevel());
+        if (road.isEmpty()) {
+            source.sendSuccess(() -> Component.literal("nothing on the road within " + range + " blocks"), false);
+            return 0;
+        }
+        final StringBuilder out = new StringBuilder("on the road within " + range + " blocks:");
+        for (final me.lovkar.thieves.target.Convoys.Seen seen : road) {
+            out.append("\n  ").append(seen.target().convoy()).append("  ").append(seen.target().name())
+                    .append(" - ").append(Math.round(Math.sqrt(seen.target().pos().distSqr(home))))
+                    .append(" blocks, ").append(seen.escort()).append(" guard(s), ")
+                    .append(seen.stacks()).append(" stack(s)");
+        }
+        source.sendSuccess(() -> Component.literal(out.toString()), false);
+        return road.size();
+    }
+
+    /**
+     * Send this colony's thief at a convoy by its id - the same path as the Send button on the
+     * hut's list, for an operator and for the rig.
+     */
+    private static int convoy(final net.minecraft.commands.CommandSourceStack source, final long id) {
+        final me.lovkar.thieves.colony.BuildingHideout hideout = hideoutAt(source);
+        if (hideout == null) {
+            source.sendFailure(Component.literal("stand in a colony that has a Hideout"));
+            return 0;
+        }
+        final me.lovkar.thieves.network.SendThereMessage.Sent sent = me.lovkar.thieves.network.SendThereMessage
+                .send(source.getLevel(), hideout, hideout.getPosition(), id,
+                        me.lovkar.thieves.target.Work.ROB.id());
+        if (!sent.pinned()) {
+            source.sendFailure(Component.literal("convoy " + id + " is not on the road within reach of this"
+                    + " Hideout, is this colony's own, or is already on the board"));
+            return 0;
+        }
+        final int onBoard = hideout.board().size();
+        source.sendSuccess(() -> Component.literal("pinned to the board: rob "
+                + hideout.board().get(onBoard - 1).target().name() + " (convoy " + id
+                + ")  the board now holds " + onBoard + " job(s)"), false);
         return 1;
     }
 

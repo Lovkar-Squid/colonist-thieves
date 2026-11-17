@@ -87,6 +87,7 @@ public class LedgerWindow extends AbstractModuleWindow<LedgerModuleView> {
         return switch (outcome) {
             case "caught" -> ChatFormatting.DARK_RED;
             case "spotted" -> ChatFormatting.GOLD;
+            case "empty" -> ChatFormatting.DARK_GRAY;
             default -> ChatFormatting.DARK_GREEN;
         };
     }

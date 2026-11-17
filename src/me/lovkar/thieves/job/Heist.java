@@ -33,6 +33,19 @@ public record Heist(Target target, Work work, long leftAt, long dueAt,
         return Math.max(3, Math.min(20, minutes)) * 1200L;
     }
 
+    /**
+     * Out to the road and back: a minute for every two hundred blocks, the pace of any job, but
+     * with no three-minute floor - a convoy is met near home or not at all, and it will not wait -
+     * and never under ten seconds each way.
+     */
+    public static long roadTicks(final BlockPos from, final BlockPos to) {
+        final double blocks = Math.sqrt(from.distSqr(to));
+        return Math.max(ROAD_LEAST, Math.round(blocks / 200.0 * 1200.0));
+    }
+
+    /** The shortest walk out to a road there is, in ticks. */
+    private static final long ROAD_LEAST = 200L;
+
     public static Heist begin(final Target target, final BlockPos from, final long now, final int skill, final int level) {
         return begin(new me.lovkar.thieves.target.Job(target, me.lovkar.thieves.target.Work.ROB),
                 from, now, skill, level, 0f);
@@ -43,7 +56,11 @@ public record Heist(Target target, Work work, long leftAt, long dueAt,
      */
     public static Heist begin(final me.lovkar.thieves.target.Job job, final BlockPos from, final long now,
                               final int skill, final int level, final float travelCut) {
-        final long there = Math.round(travelTicks(from, job.target().pos()) * (1f - travelCut));
+        // a convoy is met on the road where it is as he sets out (see Convoys.onTheRoad); anything
+        // else is a place, and places keep the old minutes
+        final long there = Math.round((job.target().kind() == TargetKind.CONVOY
+                ? roadTicks(from, job.target().pos())
+                : travelTicks(from, job.target().pos())) * (1f - travelCut));
         // a look is a quicker errand than a robbery and a sabotage is a slower one: he has to
         // wait for the right moment, and then he has to get away from what he has just done
         final float pace = switch (job.work()) {
@@ -57,6 +74,20 @@ public record Heist(Target target, Work work, long leftAt, long dueAt,
 
     public boolean due(final long now) {
         return now >= dueAt;
+    }
+
+    /**
+     * When he gets there - half way through the trip. A convoy job is decided at this moment, not
+     * when he is home again: whether the convoy is still on the road within reach is a question
+     * about when he reaches the road.
+     */
+    public long reachesAt() {
+        return leftAt + (dueAt - leftAt) / 2;
+    }
+
+    /** True once he has reached the road (or the place). */
+    public boolean there(final long now) {
+        return now >= reachesAt();
     }
 
     /** 0..1 - how much of the trip is behind him, for the Hideout's window. */
@@ -148,6 +179,27 @@ public record Heist(Target target, Work work, long leftAt, long dueAt,
         final int best = swing - swing / 2;             // the luckiest draw there is
         final int lucky = best - Math.max(needed, -swing / 2) + 1;
         return Math.max(0f, Math.min(1f, lucky / (float) (swing + 1)));
+    }
+
+    /**
+     * The odds of each outcome, 0..1 - clean, seen, caught - by counting every draw of luck the
+     * roll can make. {@link #prospect} is the first of the three; the third is what a player means
+     * by "how likely is he to be caught", and it is what a bigger escort makes worse.
+     */
+    public static float[] chances(final int mine, final int theirs) {
+        final int swing = swing(mine, theirs);
+        int clean = 0;
+        int caught = 0;
+        for (int luck = 0; luck <= swing; luck++) {
+            final int margin = mine - theirs + luck - swing / 2;
+            if (margin >= Math.round(swing * CLEAN_AT)) {
+                clean++;
+            } else if (margin <= -Math.round(swing * CAUGHT_AT)) {
+                caught++;
+            }
+        }
+        final float draws = swing + 1;
+        return new float[]{clean / draws, (draws - clean - caught) / draws, caught / draws};
     }
 
     /** How good the take is, 0..1, from the same margin the outcome came from. */

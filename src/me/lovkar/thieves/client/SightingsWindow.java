@@ -33,6 +33,9 @@ import java.util.List;
  * sabotage - because those two are the seam between this mod and the war one and have no meaning
  * without it. The server checks that again anyway; this button is a convenience, not a
  * permission.</p>
+ *
+ * <p>A convoy on the road is always robbed, whatever the button says, and its row sends the war
+ * mod's id for it: by the time the packet arrives it is not where the row says.</p>
  */
 public class SightingsWindow extends AbstractModuleWindow<SightingsModuleView> {
 
@@ -152,8 +155,8 @@ public class SightingsWindow extends AbstractModuleWindow<SightingsModuleView> {
                     : "com.colonist_thieves.gui.sightings.send"));
             send.setEnabled(!place.pinned());
             send.setHandler(clicked -> {
-                PacketDistributor.sendToServer(
-                        new SendThereMessage(buildingView.getID(), place.pos(), work.id()));
+                PacketDistributor.sendToServer(new SendThereMessage(buildingView.getID(), place.pos(),
+                        (place.convoy() != 0L ? Work.ROB : work).id(), place.convoy()));
                 clicked.setEnabled(false);
                 clicked.setText(Component.translatable("com.colonist_thieves.gui.sightings.pinned"));
             });

@@ -36,6 +36,11 @@ import java.util.List;
  * "Look around" and no more often than once every half minute. Colonies and kingdoms are cheap
  * enough to re-read each time and are added live, which is also why a colony that grows shows its
  * new strength without anybody pressing anything.</p>
+ *
+ * <p>With Colonies at War 0.3.0 the list has a third live part: the convoys on the road within the
+ * Hideout's reach that its own colony did not send. They are read every time too - a convoy is
+ * somewhere else every second - and never kept in the saved list, because by the next look it has
+ * arrived.</p>
  */
 public class SightingsModule extends AbstractBuildingModule implements IPersistentModule {
 
@@ -107,6 +112,7 @@ public class SightingsModule extends AbstractBuildingModule implements IPersiste
         final List<Sighting> live = new ArrayList<>();
         addColonies(level, mine, live);
         addKingdoms(level, live);
+        addConvoys(level, mine, live);
         // anything the last look already read keeps its reading; anything new since shows up
         // unread, which is the honest answer and costs nothing
         for (final Sighting sighting : live) {
@@ -122,7 +128,7 @@ public class SightingsModule extends AbstractBuildingModule implements IPersiste
 
     private static boolean known(final List<Sighting> out, final Target target) {
         for (final Sighting sighting : out) {
-            if (sighting.target().pos().equals(target.pos())) {
+            if (sighting.target().samePlace(target)) {
                 return true;
             }
         }
@@ -141,6 +147,27 @@ public class SightingsModule extends AbstractBuildingModule implements IPersiste
             }
         } catch (final Throwable t) {
             Thieves.LOGGER.warn("[hideout] could not list the neighbouring colonies: {}", t.toString());
+        }
+    }
+
+    /**
+     * The convoys passing within this Hideout's reach, other than its own colony's. Reading one
+     * costs nothing - the escort is in the war mod's answer already - so a convoy shows what it is
+     * worth defending straight away rather than waiting for somebody to look around.
+     */
+    private void addConvoys(final ServerLevel level, final IColony mine, final List<Sighting> out) {
+        if (building == null) {
+            return;
+        }
+        try {
+            for (final me.lovkar.thieves.target.Convoys.Seen convoy : me.lovkar.thieves.target.Convoys.offered(
+                    level, building.getPosition(), building.getBuildingLevel(), mine)) {
+                out.add(new Sighting(convoy.target(), Math.round(me.lovkar.thieves.assess.Profiles.convoy(
+                        convoy.target(), convoy.escort(), convoy.stacks(),
+                        Heat.of(level, convoy.target().key())).vigilance())));
+            }
+        } catch (final Throwable t) {
+            Thieves.LOGGER.warn("[hideout] could not look at the road: {}", t.toString());
         }
     }
 
@@ -187,6 +214,8 @@ public class SightingsModule extends AbstractBuildingModule implements IPersiste
             buf.writeVarInt(Math.round(100f
                     * (me.lovkar.thieves.intel.Intel.known(level, target.key())
                     / me.lovkar.thieves.intel.Intel.KNOWN)));
+            // the war mod's id for a convoy, which is what the Send button has to name; 0 otherwise
+            buf.writeLong(target.convoy());
         }
         buf.writeBoolean(lookedAt != Long.MIN_VALUE && level.getGameTime() - lookedAt < LOOK_EVERY);
         // whether this colony can send a thief to do anything other than rob
@@ -195,7 +224,7 @@ public class SightingsModule extends AbstractBuildingModule implements IPersiste
 
     private static boolean alreadyPinned(final BuildingHideout hideout, final Target target) {
         for (final me.lovkar.thieves.target.Job pinned : hideout.board()) {
-            if (pinned.target().pos().equals(target.pos())) {
+            if (pinned.target().samePlace(target)) {
                 return true;
             }
         }

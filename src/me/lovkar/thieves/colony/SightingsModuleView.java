@@ -19,10 +19,11 @@ public class SightingsModuleView extends AbstractBuildingModuleView {
     /**
      * One place, as the window shows it.
      *
-     * @param known 0-100, how much of what a scout could tell you about this place is still fresh
+     * @param known  0-100, how much of what a scout could tell you about this place is still fresh
+     * @param convoy the war mod's id when this is a convoy on the road, else 0
      */
     public record Place(String name, String kind, BlockPos pos, int strength, int heat,
-                        boolean pinned, int known) {
+                        boolean pinned, int known, long convoy) {
     }
 
     private final List<Place> places = new ArrayList<>();
@@ -37,7 +38,7 @@ public class SightingsModuleView extends AbstractBuildingModuleView {
         final int count = buf.readVarInt();
         for (int i = 0; i < count; i++) {
             places.add(new Place(buf.readUtf(), buf.readUtf(), buf.readBlockPos(),
-                    buf.readInt(), buf.readVarInt(), buf.readBoolean(), buf.readVarInt()));
+                    buf.readInt(), buf.readVarInt(), buf.readBoolean(), buf.readVarInt(), buf.readLong()));
         }
         resting = buf.readBoolean();
         warRoom = buf.readBoolean();

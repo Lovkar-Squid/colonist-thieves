@@ -21,7 +21,14 @@ public enum TargetKind {
     /** A Waking World kingdom. It has a standing with you, and catapults. */
     KINGDOM("kingdom", null, 1.2f, true),
     /** A MineColonies colony - somebody's town, and on a server somebody's feelings. */
-    COLONY("colony", null, 1.1f, true);
+    COLONY("colony", null, 1.1f, true),
+    /**
+     * A Colonies at War convoy on the road: a moving target with no place of its own. Its defence
+     * is the escort riding with it, so the kind itself adds nothing - a convoy nobody guards is
+     * the easiest night there is. It belongs to the colony that sent it, and that colony can hold
+     * a grudge. Found through the war mod, never by position: see {@link Convoys}.
+     */
+    CONVOY("convoy", null, 1.0f, true);
 
     private final String id;
     private final String tag;
@@ -54,7 +61,10 @@ public enum TargetKind {
         return diplomatic;
     }
 
-    /** The loot table rolled for this kind when nothing more specific exists. */
+    /**
+     * The loot table rolled for this kind when nothing more specific exists. A convoy has none:
+     * what comes home is the convoy's own cargo, taken off it through the war mod.
+     */
     public ResourceLocation lootTable() {
         return ResourceLocation.fromNamespaceAndPath("colonist_thieves", "theft/" + id);
     }

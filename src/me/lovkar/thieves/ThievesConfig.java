@@ -19,6 +19,8 @@ public final class ThievesConfig {
     private static final ModConfigSpec.BooleanValue RETALIATION;
     private static final ModConfigSpec.IntValue MAX_STEAL;
     private static final ModConfigSpec.BooleanValue TELL_THE_VICTIM;
+    private static final ModConfigSpec.IntValue CONVOY_RANGE;
+    private static final ModConfigSpec.IntValue ESCORT_WEIGHT;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -37,6 +39,14 @@ public final class ThievesConfig {
                 .comment("Tell the robbed colony's owner when a thief is caught or seen. A clean job is never",
                         "announced - that is the whole point of a clean job.")
                 .define("tellTheVictim", true);
+        CONVOY_RANGE = builder
+                .comment("With Colonies at War: how far from a level 1 Hideout, in blocks, a passing convoy can be",
+                        "intercepted. Every Hideout level above the first adds a quarter of this again.")
+                .defineInRange("convoyRange", 160, 16, 2000);
+        ESCORT_WEIGHT = builder
+                .comment("With Colonies at War: how much each guard riding with a convoy adds to what a thief has",
+                        "to beat. A convoy with no escort is the easiest target there is.")
+                .defineInRange("convoyEscortWeight", 8, 0, 100);
         builder.pop();
         SPEC = builder.build();
     }
@@ -55,6 +65,16 @@ public final class ThievesConfig {
 
     public static int maxStacksFromPlayerColony() {
         return read(MAX_STEAL, 3);
+    }
+
+    /** How far a level 1 Hideout watches the road for convoys, in blocks. */
+    public static int convoyRange() {
+        return read(CONVOY_RANGE, 160);
+    }
+
+    /** What each escort guard adds to a convoy's watch. */
+    public static int convoyEscortWeight() {
+        return read(ESCORT_WEIGHT, 8);
     }
 
     private static boolean read(final ModConfigSpec.BooleanValue value, final boolean fallback) {
