@@ -74,12 +74,13 @@ public final class Interception {
     }
 
     /**
-     * How many stacks he may try to carry off: one, plus one for every two Hideout levels, plus one
-     * for every eight points of skill - half that, at least one, if he was seen doing it. The war
-     * mod caps it again at half of what the convoy set out with.
+     * How many stacks he may try to carry off: two, plus one for every two Hideout levels, plus one
+     * for every eight points of skill - half that, never none, if he was seen doing it, which is
+     * always less than a clean job would have taken. The war mod caps it again at half of what the
+     * convoy set out with.
      */
     public static int stacksFor(final Outcome outcome, final int skill, final int hideoutLevel) {
-        final int clean = 1 + Math.max(0, hideoutLevel) / 2 + Math.max(0, skill) / 8;
+        final int clean = 2 + Math.max(0, hideoutLevel) / 2 + Math.max(0, skill) / 8;
         if (outcome == Outcome.CLEAN) {
             return clean;
         }

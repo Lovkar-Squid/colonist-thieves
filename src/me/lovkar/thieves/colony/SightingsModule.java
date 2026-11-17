@@ -104,8 +104,8 @@ public class SightingsModule extends AbstractBuildingModule implements IPersiste
     // ------------------------------------------------------------------ the whole list
 
     /**
-     * Everything worth showing: what was found by looking, plus the colonies and kingdoms that
-     * need no looking for.
+     * Everything worth showing: what was found by looking, plus the colonies, kingdoms and
+     * convoys that need no looking for.
      */
     public List<Sighting> everything(final ServerLevel level, final IColony mine) {
         final List<Sighting> out = new ArrayList<>(seen);
@@ -113,11 +113,12 @@ public class SightingsModule extends AbstractBuildingModule implements IPersiste
         addColonies(level, mine, live);
         addKingdoms(level, live);
         addConvoys(level, mine, live);
-        // anything the last look already read keeps its reading; anything new since shows up
-        // unread, which is the honest answer and costs nothing
+        // anything the last look already read keeps its reading; anything new since shows up as
+        // it came - unread for a colony or a kingdom, which is the honest answer and costs
+        // nothing, and already read for a convoy, whose escort came with it
         for (final Sighting sighting : live) {
             if (!known(out, sighting.target())) {
-                out.add(new Sighting(sighting.target(), UNREAD));
+                out.add(sighting);
             }
         }
         return out;
