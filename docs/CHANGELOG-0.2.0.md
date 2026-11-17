@@ -1,4 +1,4 @@
-# Colonist Thieves 0.2.0 (unreleased)
+# Colonist Thieves 0.2.0 (17 Nov 2026)
 
 ## Robbing a convoy on the road
 
