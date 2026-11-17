@@ -44,6 +44,9 @@ many thieves are waiting on its road, and the receiving colony gets only what is
 
 The sending colony's owner hears about it when the thief was caught or seen, and only then.
 
+A thief who meets the convoy and then dies or loses his job before he is home loses what he took with
+him, and the job does not go back on the board: that convoy has been robbed once already.
+
 **Two settings and a command.** `convoyRange` (160) is how far a level 1 Hideout watches the road,
 and `convoyEscortWeight` (8) is what each escort guard adds to the watch. `/thieves convoy` lists
 the convoys your Hideout can see, with their ids, and `/thieves convoy <id>` sends a thief at one —
