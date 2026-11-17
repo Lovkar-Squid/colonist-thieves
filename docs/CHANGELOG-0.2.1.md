@@ -1,4 +1,4 @@
-# Colonist Thieves 0.2.1 (unreleased)
+# Colonist Thieves 0.2.1 (17 Nov 2026)
 
 Two rules for robbing a Colonies at War convoy, both from playing 0.2.0.
 
