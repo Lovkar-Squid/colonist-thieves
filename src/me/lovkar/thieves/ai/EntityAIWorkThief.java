@@ -17,10 +17,12 @@ import me.lovkar.thieves.colony.ThievesResearch;
 import me.lovkar.thieves.colony.JobThief;
 import me.lovkar.thieves.compat.War;
 import me.lovkar.thieves.job.Heist;
+import me.lovkar.thieves.job.Interception;
 import me.lovkar.thieves.job.Outcome;
 import me.lovkar.thieves.loot.Take;
 import me.lovkar.thieves.target.Heat;
 import me.lovkar.thieves.intel.Intel;
+import me.lovkar.thieves.target.Convoys;
 import me.lovkar.thieves.target.Job;
 import me.lovkar.thieves.target.Target;
 import me.lovkar.thieves.target.Work;
@@ -67,6 +69,12 @@ public class EntityAIWorkThief extends AbstractEntityAIBasic<JobThief, BuildingH
     private static final long SCOUT_EVERY = 1200L;
     /** Debug only: when he last said out loud that he had nothing to do. */
     private long idleSaidAt = Long.MIN_VALUE;
+    /**
+     * Whether a convoy on the board waits for dark like every other job. It does not: a convoy is
+     * on the road now and will have arrived long before nightfall, so an order to meet one is
+     * taken whenever it is there.
+     */
+    private static final boolean CONVOYS_WAIT_FOR_DARK = false;
 
     public EntityAIWorkThief(final @NotNull JobThief job) {
         super(job);
@@ -97,14 +105,21 @@ public class EntityAIWorkThief extends AbstractEntityAIBasic<JobThief, BuildingH
         }
         // A pinned mark is an order, but it is still a thief's order: he goes after dark. Without
         // this he takes the next job the moment he walks in from the last one, and the first live
-        // test had him leaving on a second job at ten in the morning.
+        // test had him leaving on a second job at ten in the morning. A convoy is the exception:
+        // it will not still be on the road at nightfall, so it is met when it passes.
+        Job mark;
         if (!isNight()) {
-            job.setStatusLine("waiting for dark");
-            return AIWorkerState.IDLE;
-        }
-        Job mark = building.takeJob(this::willing);
-        if (mark == null) {
-            mark = lookForWork();
+            mark = CONVOYS_WAIT_FOR_DARK ? null
+                    : building.takeJob(on -> on.target().kind() == TargetKind.CONVOY && willing(on));
+            if (mark == null) {
+                job.setStatusLine("waiting for dark");
+                return AIWorkerState.IDLE;
+            }
+        } else {
+            mark = building.takeJob(this::willing);
+            if (mark == null) {
+                mark = lookForWork();
+            }
         }
         if (mark == null) {
             job.setStatusLine(building.auto() ? "nothing worth robbing tonight" : "no marks on the board");
@@ -120,6 +135,8 @@ public class EntityAIWorkThief extends AbstractEntityAIBasic<JobThief, BuildingH
             }
             return AIWorkerState.IDLE;
         }
+        // a convoy has moved on since it was pinned: he sets out for where it is now
+        mark = Convoys.onTheRoad(world, mark, building.getPosition(), building.getBuildingLevel(), colony());
         final ThievesResearch.Bonuses learned = ThievesResearch.Bonuses.of(colony());
         final Heist heist = Heist.begin(mark, building.getPosition(), world.getGameTime(), skill(),
                 building.getBuildingLevel(), learned.travelCut());
@@ -274,6 +291,9 @@ public class EntityAIWorkThief extends AbstractEntityAIBasic<JobThief, BuildingH
             gone(true);
         }
         final Heist heist = job.getHeist();
+        if (heist.target().kind() == TargetKind.CONVOY) {
+            return onTheRoad(heist);
+        }
         if (!heist.due(world.getGameTime())) {
             return getState();
         }
@@ -299,6 +319,32 @@ public class EntityAIWorkThief extends AbstractEntityAIBasic<JobThief, BuildingH
         Thieves.LOGGER.info("[thief] {} finishes {} at {} - {} - {}", name(), heist.work().id(),
                 heist.target().name(), outcome.id(), there.line());
         return AIWorkerState.NETHER_RETURN;
+    }
+
+    /**
+     * A convoy job, which is decided when he reaches the road rather than when he is home.
+     *
+     * <p>Half way through the trip the war mod is asked whether that convoy is still on the road
+     * within the Hideout's reach; {@link Interception} does the asking, the roll and - only after
+     * the roll, and only if he kept his loot - the taking. The outcome is kept on the job, so a
+     * save in the second half of the trip does not roll it again, and he walks home with it.</p>
+     */
+    private IAIState onTheRoad(final Heist heist) {
+        final long now = world.getGameTime();
+        if (job.getOutcome() == null) {
+            if (!heist.there(now)) {
+                return getState();
+            }
+            final ThievesResearch.Bonuses learned = ThievesResearch.Bonuses.of(colony());
+            final Interception.Result met = Interception.intercept(world, heist, building.getPosition(),
+                    building.getBuildingLevel(), colony(), learned.roll(), learned.loot(), worker.getRandom());
+            job.setOutcome(met.outcome());
+            job.addTake(met.take());
+            Thieves.LOGGER.info("[thief] {} reaches the road for {} - {} - {} stack(s) - {}", name(),
+                    heist.target().name(), met.outcome() == Outcome.EMPTY ? "the road was empty"
+                            : met.outcome().id(), met.take().size(), met.there().line());
+        }
+        return heist.due(now) ? AIWorkerState.NETHER_RETURN : getState();
     }
 
     /** Another player's warehouse is never emptied in one night, whatever the roll said. */
@@ -348,23 +394,48 @@ public class EntityAIWorkThief extends AbstractEntityAIBasic<JobThief, BuildingH
      * genuinely free. A caught thief brings the raid.</p>
      */
     private void settle(final Heist heist, final Outcome outcome) {
+        reckon(world, building, colony(), heist, outcome, countOf(job.getTake()),
+                ThievesResearch.Bonuses.of(colony()));
+        if (outcome == Outcome.CAUGHT) {
+            worker.getCitizenData().setJobStatus(com.minecolonies.api.entity.ai.JobStatus.STUCK);
+            worker.hurt(world.damageSources().generic(), 6.0f);
+            if (ThievesConfig.retaliation()) {
+                retaliate();
+            }
+        }
+    }
+
+    /**
+     * The books, once he is home: heat on the place, a line in the log, the hut's count, and -
+     * <b>only</b> if he was caught or seen, and only against a colony or one of its convoys -
+     * standing, through the war mod.
+     *
+     * <p>Static, and given everything it needs, so that the rig can put a night through exactly
+     * this and read the log and the standing afterwards. A convoy's goods are its colony's goods:
+     * being seen on the road costs what being seen in that colony's warehouse costs, and being
+     * caught twice that. An empty road is no job at all - nobody was there, so nothing gets hotter
+     * and nobody can put a name to anything; it goes in the log so the player knows why he came
+     * home with nothing.</p>
+     */
+    public static void reckon(final ServerLevel world, final BuildingHideout building, final IColony mine,
+                              final Heist heist, final Outcome outcome, final int took,
+                              final ThievesResearch.Bonuses learned) {
         final Target target = heist.target();
-        final ThievesResearch.Bonuses learned = ThievesResearch.Bonuses.of(colony());
         // a cold trail never makes a job free - somebody always notices something
-        Heat.raise(world, target.key(),
-                Math.max(1, Math.round(outcome.heat() * (1f - learned.heatCut()))));
+        if (outcome != Outcome.EMPTY) {
+            Heat.raise(world, target.key(),
+                    Math.max(1, Math.round(outcome.heat() * (1f - learned.heatCut()))));
+        }
         // getGameTime, NOT getDayTime. getDayTime is the clock, and the clock can be SET - by a
         // command, by another mod - which resets the day number to nought and leaves the log
         // reading "day 1, day 0, day 2" for nights that happened in order. getGameTime only ever
         // counts up, so the number beside a night is the night it actually was.
-        final int took = countOf(job.getTake());
         building.record(new BuildingHideout.Entry(target.name(), target.kind().id(),
                 world.getGameTime() / 24000L, outcome.id(), took, heist.work().id()));
-        tally(heist, outcome, took);
+        tally(building, heist, outcome, took);
 
         if (outcome.discovered() && target.kind().diplomatic()) {
-            final IColony mine = worker.getCitizenData().getColony();
-            if (target.kind() == TargetKind.COLONY) {
+            if (target.kind() == TargetKind.COLONY || target.kind() == TargetKind.CONVOY) {
                 // being caught breaking something is worse than being caught taking something,
                 // and being caught merely looking is the cheapest of the three
                 final int base = switch (heist.work()) {
@@ -374,15 +445,10 @@ public class EntityAIWorkThief extends AbstractEntityAIBasic<JobThief, BuildingH
                 };
                 final int full = outcome == Outcome.CAUGHT ? base * 2 : base;
                 final int cost = Math.max(1, Math.round(full * (1f - learned.standingCut())));
-                War.offend(mine, target.colonyId(), cost, "theft");
+                // a convoy's target carries the colony that sent it, which is who minds
+                War.offend(mine, target.colonyId(), cost,
+                        target.kind() == TargetKind.CONVOY ? "convoy" : "theft");
                 tellTheVictim(target, outcome, mine);
-            }
-        }
-        if (outcome == Outcome.CAUGHT) {
-            worker.getCitizenData().setJobStatus(com.minecolonies.api.entity.ai.JobStatus.STUCK);
-            worker.hurt(world.damageSources().generic(), 6.0f);
-            if (ThievesConfig.retaliation()) {
-                retaliate();
             }
         }
     }
@@ -398,7 +464,8 @@ public class EntityAIWorkThief extends AbstractEntityAIBasic<JobThief, BuildingH
      * <p>The labels go in our own lang file under MineColonies' key - the same trick the settings
      * labels need - because the id is ours but the window that reads it is theirs.</p>
      */
-    private void tally(final Heist heist, final Outcome outcome, final int took) {
+    private static void tally(final BuildingHideout building, final Heist heist, final Outcome outcome,
+                              final int took) {
         try {
             final com.minecolonies.core.colony.buildings.modules.BuildingStatisticsModule stats =
                     building.getModuleMatching(
@@ -432,7 +499,7 @@ public class EntityAIWorkThief extends AbstractEntityAIBasic<JobThief, BuildingH
     }
 
     /** On a server the robbed player hears about it - but only when there was something to hear. */
-    private void tellTheVictim(final Target target, final Outcome outcome, final IColony mine) {
+    private static void tellTheVictim(final Target target, final Outcome outcome, final IColony mine) {
         if (!ThievesConfig.tellTheVictim()) {
             return;
         }
@@ -442,11 +509,16 @@ public class EntityAIWorkThief extends AbstractEntityAIBasic<JobThief, BuildingH
             if (theirs == null) {
                 return;
             }
-            final String text = outcome == Outcome.CAUGHT
-                    ? "We caught a thief from " + mine.getName() + " in our stores."
-                    : "Somebody from " + mine.getName() + " was seen in our warehouse.";
+            // a convoy's sender hears it was on the road, and which convoy
+            final Component text = target.kind() == TargetKind.CONVOY
+                    ? Component.translatable(outcome == Outcome.CAUGHT
+                            ? "com.colonist_thieves.victim.convoy_caught"
+                            : "com.colonist_thieves.victim.convoy_seen", mine.getName(), target.name())
+                    : Component.literal(outcome == Outcome.CAUGHT
+                            ? "We caught a thief from " + mine.getName() + " in our stores."
+                            : "Somebody from " + mine.getName() + " was seen in our warehouse.");
             for (final net.minecraft.world.entity.player.Player player : theirs.getMessagePlayerEntities()) {
-                player.sendSystemMessage(Component.literal(text));
+                player.sendSystemMessage(text);
             }
         } catch (final Throwable t) {
             Thieves.LOGGER.warn("[thief] could not tell the victim: {}", t.toString());

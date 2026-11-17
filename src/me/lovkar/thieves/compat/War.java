@@ -148,4 +148,153 @@ public final class War {
             return false;
         }
     }
+
+    // ------------------------------------------------------------------ convoys on the road (0.3.0)
+
+    /*
+     * Colonies at War 0.3.0 put its convoys on a real road and gave the bridge four ways to look at
+     * one. They are looked up the way hasWarRoom is: each by name, each on its own, each cached,
+     * and a missing one is remembered as missing rather than tried again on every call. An older
+     * war mod without them is a world with no convoys in it - never a broken bridge, so none of
+     * these four ever sets {@code broken}, and walls, standing and the rest carry on as before.
+     */
+
+    private static final int NEAR = 0;
+    private static final int CARGO = 1;
+    private static final int ESCORT = 2;
+    private static final int ROB = 3;
+    private static final String[] CONVOY_NAMES = {"convoysNear", "convoyCargo", "convoyEscort", "robConvoy"};
+    private static final Class<?>[][] CONVOY_TYPES = {
+            {net.minecraft.server.level.ServerLevel.class, net.minecraft.core.BlockPos.class, int.class},
+            {net.minecraft.server.level.ServerLevel.class, long.class},
+            {net.minecraft.server.level.ServerLevel.class, long.class},
+            {net.minecraft.server.level.ServerLevel.class, long.class, int.class}};
+    private static final java.lang.reflect.Method[] convoyMethods = new java.lang.reflect.Method[4];
+    private static final boolean[] convoyMissing = new boolean[4];
+    /** Test hook: the class the four convoy lookups are made on instead of the real bridge. */
+    private static Class<?> convoyBridge;
+
+    /**
+     * <b>For the rig only.</b> Make the four convoy lookups on {@code stand} instead of the real
+     * bridge - a class with the six older methods and none of the new four is a 0.2.2 war mod, as
+     * far as this file can tell. {@code null} goes back to the real thing. Only the convoy lookups
+     * are touched; the six older ones keep the method they already found.
+     */
+    public static synchronized void convoyBridgeForTests(final Class<?> stand) {
+        convoyBridge = stand;
+        java.util.Arrays.fill(convoyMethods, null);
+        java.util.Arrays.fill(convoyMissing, false);
+    }
+
+    private static synchronized java.lang.reflect.Method convoyMethod(final int which) {
+        if (!present() || convoyMissing[which]) {
+            return null;
+        }
+        if (convoyMethods[which] == null) {
+            try {
+                final Class<?> on = convoyBridge != null ? convoyBridge : bridge();
+                convoyMethods[which] = on.getMethod(CONVOY_NAMES[which], CONVOY_TYPES[which]);
+            } catch (final NoSuchMethodException old) {
+                convoyMissing[which] = true;           // a war mod from before the road
+                return null;
+            } catch (final Throwable t) {
+                convoyMissing[which] = true;
+                return null;
+            }
+        }
+        return convoyMethods[which];
+    }
+
+    /** True if the war mod has all four convoy lookups, so the Hideout may offer convoys at all. */
+    public static boolean convoys() {
+        for (int which = 0; which < CONVOY_NAMES.length; which++) {
+            if (convoyMethod(which) == null) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * The convoys on the road out within {@code range} blocks of {@code at}: one {@code long[]}
+     * each, {@code {id, fromColony, toColony (0 = a kingdom), escortSize, stacksCarried, x, y, z}}.
+     * Empty without the war mod, without the lookup, or on any error.
+     */
+    public static java.util.List<long[]> convoysNear(final net.minecraft.server.level.ServerLevel level,
+                                                     final net.minecraft.core.BlockPos at, final int range) {
+        final java.lang.reflect.Method m = convoyMethod(NEAR);
+        if (m == null || level == null || at == null) {
+            return new java.util.ArrayList<>();
+        }
+        try {
+            return only(m.invoke(null, level, at, range), long[].class);
+        } catch (final Throwable t) {
+            return new java.util.ArrayList<>();
+        }
+    }
+
+    /**
+     * Our own copy of what the war mod handed back, keeping only what is the type it promised - so
+     * a war mod that answered with something else is an empty answer here, never a
+     * ClassCastException in whoever reads the list.
+     */
+    private static <T> java.util.List<T> only(final Object answer, final Class<T> type) {
+        final java.util.List<T> out = new java.util.ArrayList<>();
+        if (answer instanceof Iterable<?> rows) {
+            for (final Object row : rows) {
+                if (type.isInstance(row)) {
+                    out.add(type.cast(row));
+                }
+            }
+        }
+        return out;
+    }
+
+    /** A copy of what that convoy carries now; empty when it is not on the road or cannot be asked. */
+    public static java.util.List<net.minecraft.world.item.ItemStack> convoyCargo(
+            final net.minecraft.server.level.ServerLevel level, final long id) {
+        final java.lang.reflect.Method m = convoyMethod(CARGO);
+        if (m == null || level == null) {
+            return new java.util.ArrayList<>();
+        }
+        try {
+            return only(m.invoke(null, level, id), net.minecraft.world.item.ItemStack.class);
+        } catch (final Throwable t) {
+            return new java.util.ArrayList<>();
+        }
+    }
+
+    /**
+     * How many guards ride with that convoy, or -1 when nobody can say. <b>-1 is not "no escort":</b>
+     * it is a convoy that is gone, unknown or unreachable, and nothing is ever rolled against it.
+     */
+    public static int convoyEscort(final net.minecraft.server.level.ServerLevel level, final long id) {
+        final java.lang.reflect.Method m = convoyMethod(ESCORT);
+        if (m == null || level == null) {
+            return -1;
+        }
+        try {
+            return (Integer) m.invoke(null, level, id);
+        } catch (final Throwable t) {
+            return -1;
+        }
+    }
+
+    /**
+     * Take at most {@code maxStacks} stacks off that convoy. The war mod never lets more than half
+     * of what it set out with go, over every robbery of it, and it does not touch standing: that
+     * is still {@link #offend}, and still only when the thief was caught or seen.
+     */
+    public static java.util.List<net.minecraft.world.item.ItemStack> robConvoy(
+            final net.minecraft.server.level.ServerLevel level, final long id, final int maxStacks) {
+        final java.lang.reflect.Method m = convoyMethod(ROB);
+        if (m == null || level == null || maxStacks <= 0) {
+            return new java.util.ArrayList<>();
+        }
+        try {
+            return only(m.invoke(null, level, id, maxStacks), net.minecraft.world.item.ItemStack.class);
+        } catch (final Throwable t) {
+            return new java.util.ArrayList<>();
+        }
+    }
 }

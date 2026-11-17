@@ -71,6 +71,31 @@ public final class Profiles {
                 garrison * 3, Math.min(100, wealth), Math.min(100, watch), softness);
     }
 
+    /**
+     * A convoy on the road, read through the war mod: its escort is the whole of its defence.
+     *
+     * <p>Each guard riding with it adds the configured weight to the watch, and nothing else does -
+     * no walls on a road, no garrison at home to count - so a convoy that left with no escort is
+     * the easiest night in the game, and one with six knights is not. An escort the war mod cannot
+     * report (-1: the convoy has arrived, or is unknown) is read as none here; that is only ever
+     * what the list shows, because the interception itself never rolls against a convoy that is
+     * not on the road.</p>
+     */
+    public static Assessment convoy(final ServerLevel level, final Target target) {
+        final long id = target.convoy();
+        return convoy(target, me.lovkar.thieves.compat.War.convoyEscort(level, id),
+                me.lovkar.thieves.compat.War.convoyCargo(level, id).size(), Heat.of(level, target.key()));
+    }
+
+    /** The same reading from numbers already in hand: the escort, the stacks carried and the heat. */
+    public static Assessment convoy(final Target target, final int escort, final int stacks, final int heat) {
+        final int guards = Math.max(0, escort);
+        final int watch = Math.min(100, guards * me.lovkar.thieves.ThievesConfig.convoyEscortWeight() + heat);
+        // the escort is "away" in the colony's sense - out on the road, not at home on the walls
+        return new Assessment(target.name(), TargetKind.CONVOY, 0, guards, 0, 0, 0,
+                Math.min(100, Math.max(0, stacks) * 10), watch, 10);
+    }
+
     /** What the kind is like on average, for a place whose people are not loaded. */
     private static Assessment typical(final Target target, final int heat) {
         final TargetKind kind = target.kind();

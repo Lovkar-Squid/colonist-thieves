@@ -136,7 +136,8 @@ public class Thieves {
      * own position - because a packet from a client is a request, never an instruction.</p>
      */
     private static void registerPayloads(final net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event) {
-        final var registrar = event.registrar("1");
+        // "2": 0.2.0's Send button names a convoy by id, so a 0.1.x client cannot talk to it
+        final var registrar = event.registrar("2");
         registrar.playToServer(
                 me.lovkar.thieves.network.UnpinMessage.TYPE,
                 me.lovkar.thieves.network.UnpinMessage.STREAM_CODEC,
