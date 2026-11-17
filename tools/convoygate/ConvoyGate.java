@@ -317,6 +317,23 @@ public final class ConvoyGate {
                         && back.target().colonyId() == sender.getID() && back.dueAt() == out.dueAt()
                         && ("convoy/" + id).equals(back.target().key()),
                 back == null ? "lost" : back.target().kind().id() + " " + back.target().convoy() + " " + back.target().key());
+        // decided on the road and walking home: the new outcome and what he carries survive too
+        job.setHeist(out);
+        job.setOutcome(Outcome.EMPTY);
+        job.addTake(List.of(new ItemStack(Items.IRON_INGOT, 5)));
+        final CompoundTag walking = job.serializeNBT(server.registryAccess());
+        job.setHeist(null);
+        job.setOutcome(null);
+        job.getTake().clear();
+        job.deserializeNBT(server.registryAccess(), walking);
+        final Outcome kept = job.getOutcome();
+        final int carried = items(List.copyOf(job.getTake()));
+        final boolean stillOut = job.getHeist() != null && job.getHeist().target().convoy() == id;
+        job.setHeist(null);
+        job.setOutcome(null);
+        job.getTake().clear();
+        check("...and so does a convoy job already decided on the road", stillOut && kept == Outcome.EMPTY
+                && carried == 5, "out " + stillOut + ", outcome " + kept + ", carrying " + carried);
         final CompoundTag older = Heist.begin(Target.ofColony(level.dimension(), sender.getCenter(), "Ironhold",
                 sender.getID()), post, now, 10, 1).save();
         final Heist oldBack = Heist.load(older);

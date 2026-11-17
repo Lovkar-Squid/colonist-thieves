@@ -34,9 +34,9 @@ public record Heist(Target target, Work work, long leftAt, long dueAt,
     }
 
     /**
-     * Out to the road and back: a minute for every two hundred blocks, the pace of any job, but
-     * with no three-minute floor - a convoy is met near home or not at all, and it will not wait -
-     * and never under ten seconds each way.
+     * Out to the road, one way: a minute for every two hundred blocks, the pace of any job, but
+     * with no three-minute floor - a convoy is met near home or not at all, and it will not wait.
+     * Never under ten seconds; {@link #begin} still makes the whole trip at least a minute.
      */
     public static long roadTicks(final BlockPos from, final BlockPos to) {
         final double blocks = Math.sqrt(from.distSqr(to));

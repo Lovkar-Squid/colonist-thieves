@@ -220,7 +220,6 @@ public final class War {
      * each, {@code {id, fromColony, toColony (0 = a kingdom), escortSize, stacksCarried, x, y, z}}.
      * Empty without the war mod, without the lookup, or on any error.
      */
-    @SuppressWarnings("unchecked")
     public static java.util.List<long[]> convoysNear(final net.minecraft.server.level.ServerLevel level,
                                                      final net.minecraft.core.BlockPos at, final int range) {
         final java.lang.reflect.Method m = convoyMethod(NEAR);
@@ -228,15 +227,30 @@ public final class War {
             return new java.util.ArrayList<>();
         }
         try {
-            final Object rows = m.invoke(null, level, at, range);
-            return rows instanceof java.util.List<?> list ? (java.util.List<long[]>) list : new java.util.ArrayList<>();
+            return only(m.invoke(null, level, at, range), long[].class);
         } catch (final Throwable t) {
             return new java.util.ArrayList<>();
         }
     }
 
+    /**
+     * Our own copy of what the war mod handed back, keeping only what is the type it promised - so
+     * a war mod that answered with something else is an empty answer here, never a
+     * ClassCastException in whoever reads the list.
+     */
+    private static <T> java.util.List<T> only(final Object answer, final Class<T> type) {
+        final java.util.List<T> out = new java.util.ArrayList<>();
+        if (answer instanceof Iterable<?> rows) {
+            for (final Object row : rows) {
+                if (type.isInstance(row)) {
+                    out.add(type.cast(row));
+                }
+            }
+        }
+        return out;
+    }
+
     /** A copy of what that convoy carries now; empty when it is not on the road or cannot be asked. */
-    @SuppressWarnings("unchecked")
     public static java.util.List<net.minecraft.world.item.ItemStack> convoyCargo(
             final net.minecraft.server.level.ServerLevel level, final long id) {
         final java.lang.reflect.Method m = convoyMethod(CARGO);
@@ -244,9 +258,7 @@ public final class War {
             return new java.util.ArrayList<>();
         }
         try {
-            final Object goods = m.invoke(null, level, id);
-            return goods instanceof java.util.List<?> list
-                    ? (java.util.List<net.minecraft.world.item.ItemStack>) list : new java.util.ArrayList<>();
+            return only(m.invoke(null, level, id), net.minecraft.world.item.ItemStack.class);
         } catch (final Throwable t) {
             return new java.util.ArrayList<>();
         }
@@ -273,7 +285,6 @@ public final class War {
      * of what it set out with go, over every robbery of it, and it does not touch standing: that
      * is still {@link #offend}, and still only when the thief was caught or seen.
      */
-    @SuppressWarnings("unchecked")
     public static java.util.List<net.minecraft.world.item.ItemStack> robConvoy(
             final net.minecraft.server.level.ServerLevel level, final long id, final int maxStacks) {
         final java.lang.reflect.Method m = convoyMethod(ROB);
@@ -281,9 +292,7 @@ public final class War {
             return new java.util.ArrayList<>();
         }
         try {
-            final Object taken = m.invoke(null, level, id, maxStacks);
-            return taken instanceof java.util.List<?> list
-                    ? (java.util.List<net.minecraft.world.item.ItemStack>) list : new java.util.ArrayList<>();
+            return only(m.invoke(null, level, id, maxStacks), net.minecraft.world.item.ItemStack.class);
         } catch (final Throwable t) {
             return new java.util.ArrayList<>();
         }
