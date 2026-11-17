@@ -21,6 +21,7 @@ public final class ThievesConfig {
     private static final ModConfigSpec.BooleanValue TELL_THE_VICTIM;
     private static final ModConfigSpec.IntValue CONVOY_RANGE;
     private static final ModConfigSpec.IntValue ESCORT_WEIGHT;
+    private static final ModConfigSpec.BooleanValue CONVOY_THEFT;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -47,6 +48,11 @@ public final class ThievesConfig {
                 .comment("With Colonies at War: how much each guard riding with a convoy adds to what a thief has",
                         "to beat. A convoy with no escort is the easiest target there is.")
                 .defineInRange("convoyEscortWeight", 8, 0, 100);
+        CONVOY_THEFT = builder
+                .comment("With Colonies at War: a Hideout may send a thief at another colony's convoy on the road.",
+                        "On by default. It is a switch of its own and not allowPlayerColonyTheft, because a convoy",
+                        "always belongs to another colony: turn this off to keep every convoy on this server safe.")
+                .define("allowConvoyTheft", true);
         builder.pop();
         SPEC = builder.build();
     }
@@ -75,6 +81,10 @@ public final class ThievesConfig {
     /** What each escort guard adds to a convoy's watch. */
     public static int convoyEscortWeight() {
         return read(ESCORT_WEIGHT, 8);
+    }
+
+    public static boolean allowConvoyTheft() {
+        return read(CONVOY_THEFT, true);
     }
 
     private static boolean read(final ModConfigSpec.BooleanValue value, final boolean fallback) {

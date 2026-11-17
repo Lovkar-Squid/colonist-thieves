@@ -5,7 +5,7 @@ issueTrackerURL="https://github.com/Lovkar-Squid/colonist-thieves/issues"
 
 [[mods]]
 modId="colonist_thieves"
-version="0.2.0"
+version="0.2.1"
 displayName="Colonist Thieves"
 description='''A MineColonies profession that robs other people's settlements. Build a Hideout, hire a Thief, craft a Mark and use it on somewhere worth robbing - a barbarian camp, a village, a temple, a Waking World kingdom, or (if the server allows it) a neighbour's colony. Your thief slips out for the night and comes home clean, seen, or not at all. Every place is judged by what is actually built there - guards hired, military buildings, walls, wealth - and every item stolen comes out of a datapack loot table, so a modpack can decide what is worth taking. Made by Lovkar & Claude.'''
 authors="Lovkar & Claude"

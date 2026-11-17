@@ -50,7 +50,7 @@ public final class Convoys {
     public static List<Seen> offered(final ServerLevel level, final BlockPos hideout, final int hideoutLevel,
                                      final IColony mine) {
         final List<Seen> out = new ArrayList<>();
-        if (level == null || hideout == null || !War.convoys()) {
+        if (level == null || hideout == null || !ThievesConfig.allowConvoyTheft() || !War.convoys()) {
             return out;
         }
         for (final long[] row : War.convoysNear(level, hideout, range(hideoutLevel))) {
@@ -59,6 +59,9 @@ public final class Convoys {
             }
             if (mine != null && row[1] == mine.getID()) {
                 continue;                          // never its own colony's convoy
+            }
+            if (mine != null && row[2] == mine.getID()) {
+                continue;                          // nor one bringing goods to it: they are on their way anyway
             }
             final Target target = Target.ofConvoy(level.dimension(),
                     new BlockPos((int) row[5], (int) row[6], (int) row[7]),

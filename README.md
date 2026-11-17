@@ -36,6 +36,8 @@ somebody turns that on, and then it is PvP — that has to be a decision, not a 
 `maxStacksFromPlayerColony`, `retaliation` and `tellTheVictim` are the other three. With Colonies
 at War there are two more: `convoyRange` (160 blocks) is how far a level 1 Hideout watches the road
 for convoys, and `convoyEscortWeight` (8) is what each guard riding with a convoy adds to the watch.
+`allowConvoyTheft` (on) switches convoy robbing off for the whole server. A Hideout is never offered its
+own colony's convoys, nor one on its way to its own colony.
 
 `/thieves here` and `/thieves at <x> <z>` print what the mod thinks of a place: its garrison, its
 walls, its wealth, what a thief has to roll against and what an army would. `/thieves convoy` lists

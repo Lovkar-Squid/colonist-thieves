@@ -93,13 +93,14 @@ public final class ConvoyGate {
     private static final int IRON = 128;
     private static final int BREAD = 32;
     private static final int TOTAL = IRON + BREAD;
-    private static final String NAME = "a convoy from Ironhold to Oakford";
+    private static final String NAME = "a convoy from Ironhold to Millbrook";
 
     private int tick;
     private MinecraftServer server;
     private ServerLevel level;
     private IColony home;
     private IColony sender;
+    private IColony market;
     private BlockPos homeCentre;
     private BuildingHideout hideout;
     private IBuilding warRoom;
@@ -160,7 +161,8 @@ public final class ConvoyGate {
         level = server.overworld();
         homeCentre = surface(8, 8);
         final BlockPos far = surface(8 + DISTANCE, 8);
-        for (final BlockPos c : new BlockPos[] {homeCentre, far}) {
+        final BlockPos beyond = surface(8 - DISTANCE, 8);
+        for (final BlockPos c : new BlockPos[] {homeCentre, far, beyond}) {
             for (int cx = -3; cx <= 3; cx++) {
                 for (int cz = -3; cz <= 3; cz++) {
                     level.setChunkForced((c.getX() >> 4) + cx, (c.getZ() >> 4) + cz, true);
@@ -169,6 +171,7 @@ public final class ConvoyGate {
         }
         home = colony(homeCentre, "Oakford", "convoygate_a");
         sender = colony(far, "Ironhold", "convoygate_b");
+        market = colony(beyond, "Millbrook", "convoygate_c");
         check("two colonies are created", home != null && sender != null && home.getID() != sender.getID(),
                 (home == null ? "none" : home.getID()) + " and " + (sender == null ? "none" : sender.getID()));
         if (home == null || sender == null) {
@@ -177,6 +180,9 @@ public final class ConvoyGate {
         final Block townHall = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("minecolonies", "blockhuttownhall"));
         hut(home, homeCentre, townHall);
         hut(sender, far, townHall);
+        if (market != null) {
+            hut(market, beyond, townHall);
+        }
         final IBuilding hut = hut(home, homeCentre.offset(-12, 0, 0), Thieves.BLOCK_HUT.get());
         hideout = hut instanceof BuildingHideout h ? h : null;
         warRoom = hut(sender, far.offset(10, 0, 0), Warfare.BLOCK_HUT_WAR_ROOM.get());
@@ -250,8 +256,13 @@ public final class ConvoyGate {
             return;
         }
         final StringBuilder why = new StringBuilder();
-        final Campaigns.Campaign c = Campaigns.convoy(level, sender, home.getID(), 0, why);
-        check("Ironhold sends a convoy to Oakford with two guards", c != null && c.guards.length == 2,
+        if (market == null) {
+            check("a third colony for the convoy to go to", false, "Millbrook was not created");
+            return;
+        }
+        // the convoy goes on to Millbrook, the far side of Oakford: it passes Oakford's Hideout on its way
+        final Campaigns.Campaign c = Campaigns.convoy(level, sender, market.getID(), 0, why);
+        check("Ironhold sends a convoy to Millbrook, past Oakford, with two guards", c != null && c.guards.length == 2,
                 c == null ? why : c.guards.length + " guards, " + c.plunder.size() + " stacks");
         if (c == null) {
             return;
@@ -282,6 +293,14 @@ public final class ConvoyGate {
         check("never its own colony's: Ironhold's own Hideout there would not be offered it",
                 Convoys.find(level, post, 5, sender, id) == null && Convoys.offered(level, post, 5, sender).isEmpty(),
                 Convoys.offered(level, post, 5, sender).size());
+        check("nor to the colony it is bringing goods to: a Millbrook Hideout there would not be offered it",
+                Convoys.find(level, post, 5, market, id) == null && Convoys.offered(level, post, 5, market).isEmpty(),
+                Convoys.offered(level, post, 5, market).size());
+        final boolean theftOn = convoyTheft(false);
+        final int whileOff = Convoys.offered(level, post, 5, home).size();
+        convoyTheft(theftOn);
+        check("allowConvoyTheft off: no convoy is offered; back on: it is again",
+                whileOff == 0 && Convoys.find(level, post, 5, home, id) != null, "offered while off " + whileOff);
         if (row == null) {
             return;
         }
@@ -452,6 +471,22 @@ public final class ConvoyGate {
      * Move the convoy along its road until it is about {@code distance} blocks (flat) from the
      * Hideout, coming towards it, and say how far it really is by the thief's own bridge.
      */
+    /** Flip the allowConvoyTheft server setting; returns what it was. */
+    private static boolean convoyTheft(final boolean on) {
+        try {
+            final java.lang.reflect.Field f = ThievesConfig.class.getDeclaredField("CONVOY_THEFT");
+            f.setAccessible(true);
+            final net.neoforged.neoforge.common.ModConfigSpec.BooleanValue value =
+                    (net.neoforged.neoforge.common.ModConfigSpec.BooleanValue) f.get(null);
+            final boolean was = value.get();
+            value.set(on);
+            return was;
+        } catch (final ReflectiveOperationException e) {
+            LOGGER.warn("[convoygate] could not flip allowConvoyTheft: {}", e.toString());
+            return true;
+        }
+    }
+
     private double aim(final Campaigns.Campaign c, final long now, final long trip, final BlockPos at, final double distance) {
         double f = 0.0;
         for (int step = 0; step <= 1000; step++) {
