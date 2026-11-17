@@ -85,6 +85,14 @@ public class JobThief extends AbstractJob<EntityAIWorkThief, JobThief> {
         if (heist == null) {
             return;
         }
+        if (heist.target().kind() == me.lovkar.thieves.target.TargetKind.CONVOY && outcome != null) {
+            // he already met the convoy and took what he took: that robbery happened, and putting
+            // the job back would send somebody to rob the same convoy a second time
+            me.lovkar.thieves.Thieves.LOGGER.info("[thief] {} did not come back from {} - the road was already met",
+                    getCitizen() == null ? "a thief" : getCitizen().getName(), heist.target().name());
+            heist = null;
+            return;
+        }
         try {
             final com.minecolonies.api.colony.buildings.IBuilding home =
                     getCitizen() == null ? null : getCitizen().getWorkBuilding();
