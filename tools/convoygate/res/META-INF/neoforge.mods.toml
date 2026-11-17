@@ -1,0 +1,26 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="GPL-3.0-or-later"
+[[mods]]
+modId="convoygate"
+version="1.0.0"
+displayName="Colonist Thieves - convoy gate"
+description="Headless test: a thief is sent at a Colonies at War convoy from the Hideout's list, and the road, the roll, the take, the standing and the save all come out right."
+[[dependencies.convoygate]]
+modId="colonist_thieves"
+type="required"
+versionRange="*"
+ordering="AFTER"
+side="SERVER"
+[[dependencies.convoygate]]
+modId="colonies_at_war"
+type="required"
+versionRange="*"
+ordering="AFTER"
+side="SERVER"
+[[dependencies.convoygate]]
+modId="minecolonies"
+type="required"
+versionRange="*"
+ordering="AFTER"
+side="SERVER"
